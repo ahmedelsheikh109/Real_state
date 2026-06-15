@@ -34,7 +34,7 @@ flowchart LR
     end
     
     D --> E((Power BI / Dashboards))
-    D --> F[🧠 RAG Application\n(Upcoming)]
+    D --> F["🧠 RAG Application<br>(Upcoming)"]
     
     classDef bronze fill:#cd7f32,stroke:#333,stroke-width:2px,color:#fff;
     classDef silver fill:#c0c0c0,stroke:#333,stroke-width:2px,color:#000;
