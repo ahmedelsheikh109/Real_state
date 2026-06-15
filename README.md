@@ -5,7 +5,7 @@
 ![Delta Lake](https://img.shields.io/badge/Delta_Lake-00AAD2?style=for-the-badge&logo=delta-lake&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-Welcome to the **Real Estate Databricks Analytics Platform**. This project demonstrates a production-grade, end-to-end data engineering pipeline built using the **Medallion Architecture** (Bronze, Silver, Gold). It cleans, transforms, and structures raw real estate data into a high-performance Data Warehouse (Star Schema) tailored for downstream BI and AI applications. We also plan to integrate **Retrieval-Augmented Generation (RAG)** for conversational insights.
+Welcome to the **Real Estate Databricks Analytics Platform**. This project demonstrates a production-grade, end-to-end data engineering pipeline built using the **Medallion Architecture** (Bronze, Silver, Gold). It cleans, transforms, and structures raw real estate data into a high-performance Data Warehouse (Star Schema) tailored for downstream BI and AI applications. We also plan to integrate **RAG (Text to SQL)** for conversational database querying.
 
 ---
 
@@ -34,7 +34,7 @@ flowchart LR
     end
     
     D --> E((Power BI / Dashboards))
-    D --> F["🧠 RAG Application<br>(Upcoming)"]
+    D --> F["🧠 RAG Text to SQL<br>(Upcoming)"]
     
     classDef bronze fill:#cd7f32,stroke:#333,stroke-width:2px,color:#fff;
     classDef silver fill:#c0c0c0,stroke:#333,stroke-width:2px,color:#000;
@@ -57,7 +57,7 @@ The project is modularized by pipeline layer.
 ├── bronze/         # Layer 1: Ingestion from Raw Volumes to Delta
 ├── silver/         # Layer 2: Transformations, Standardization, Null Imputation
 ├── gold/           # Layer 3: Star Schema DWH (Dimensions, Facts, Constraints)
-├── rag/            # AI: RAG logic for Real Estate Chatbots (WIP)
+├── rag/            # AI: RAG Text to SQL logic for Real Estate Chatbots (WIP)
 └── README.md       # Project Documentation
 ```
 
@@ -77,8 +77,8 @@ The project is modularized by pipeline layer.
   - **Facts**: `fact_sales` combining enriched KPIs (`Demand_Score`, `Developer_Strength_Score`).
 - **`04_Gold_Constraints.py`**: Enforces strict Data Warehouse structural integrity. Officially registers Primary Key (PK) and Foreign Key (FK) constraints to link the ER diagram securely in the Databricks Unity Catalog.
 
-### 🟩 RAG / LLM Integration (`/rag`)
-- **Planned**: This directory will host scripts for generating vector embeddings from the Gold Layer data using Databricks Vector Search, and serving a Retrieval-Augmented Generation (RAG) model to answer complex real estate queries naturally.
+### 🟩 RAG Text to SQL Integration (`/rag`)
+- **Planned**: This directory will host scripts for interacting with the Data Warehouse via natural language, using an LLM-based RAG Text to SQL model to translate user questions into SQL queries and answer complex real estate queries naturally.
 
 ---
 
