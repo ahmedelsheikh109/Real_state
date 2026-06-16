@@ -8,7 +8,8 @@
 
 from pyspark.sql.functions import (
     col, date_format, year, month, quarter, dayofweek, weekofyear, 
-    row_number, round, when, lower, lit, expr, broadcast, count, desc, max
+    row_number, round, when, lower, lit, expr, broadcast, count, desc, max,
+    xxhash64, concat_ws, abs
 )
 from pyspark.sql.window import Window
 
@@ -50,8 +51,7 @@ dim_location_raw = df_silver.select(
     "City", "District", "Compound_Name"
 ).distinct()
 
-window_loc = Window.orderBy("City", "District", "Compound_Name")
-dim_location = dim_location_raw.withColumn("Location_Key", row_number().over(window_loc).cast("int"))
+dim_location = dim_location_raw.withColumn("Location_Key", abs(xxhash64(concat_ws("||", col("City"), col("District"), col("Compound_Name")))).cast("string"))
 
 dim_location.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{table_prefix}_gold_dim_location")
 
@@ -81,8 +81,7 @@ dim_developer_raw = df_silver.select("Developer_Name").distinct() \
     .withColumnRenamed("Final_Punctuality", "Delivery_Punctuality") \
     .fillna({"Market_Reputation": "Unknown", "Delivery_Punctuality": "Unknown"})
 
-window_dev = Window.orderBy("Developer_Name")
-dim_developer = dim_developer_raw.withColumn("Developer_Key", row_number().over(window_dev).cast("int"))
+dim_developer = dim_developer_raw.withColumn("Developer_Key", abs(xxhash64(col("Developer_Name"))).cast("string"))
 
 dim_developer.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{table_prefix}_gold_dim_developer")
 
@@ -104,8 +103,9 @@ dim_property_raw = df_silver.select(
     "Distance_To_City_Center_KM"
 ).distinct()
 
-window_prop = Window.orderBy("Unit_Type", "Size_SqM", "Rooms_Count", "Bathrooms_Count", "Floor_Level", "Latitude", "Longitude")
-dim_property = dim_property_raw.withColumn("Property_Key", row_number().over(window_prop).cast("int"))
+dim_property = dim_property_raw.withColumn("Property_Key", abs(xxhash64(concat_ws("||", 
+    col("Unit_Type"), col("Size_SqM"), col("Rooms_Count"), col("Bathrooms_Count"), col("Floor_Level"), col("Latitude"), col("Longitude")
+))).cast("string"))
 
 dim_property.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{table_prefix}_gold_dim_property")
 
@@ -177,8 +177,9 @@ fact_sales = df_silver_enriched \
           on=["Unit_Type", "Size_SqM", "Rooms_Count", "Bathrooms_Count", "Floor_Level", "View_Type", "Smart_Home_Ready", "Kitchen_Size_SqM", "Kitchen_Type", "Reception_Size_SqM", "Balcony_Size_SqM", "Has_Elevator", "Payment_Type", "Is_Ready_To_Move", "Has_Pool", "Gym", "Security", "Parking_Spots", "Latitude", "Longitude", "Nearby_Schools_Score", "Nearby_Malls_Dist_KM", "Transport_Index", "Distance_To_City_Center_KM"], how="left")
 
 # --- 4. Generate Sale_Key for the Fact Table ---
-window_fact = Window.orderBy("Sale_Date_Key", "Location_Key", "Property_Key", "Developer_Key")
-fact_sales = fact_sales.withColumn("Sale_Key", row_number().over(window_fact).cast("int"))
+fact_sales = fact_sales.withColumn("Sale_Key", abs(xxhash64(concat_ws("||", 
+    col("Sale_Date_Key"), col("Location_Key"), col("Property_Key"), col("Developer_Key"), col("Total_Price")
+))).cast("string"))
 
 # --- 5. Select Final Fact Columns (Keys and Measures ONLY) ---
 fact_sales_final = fact_sales.select(
